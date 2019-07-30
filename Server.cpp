@@ -1,21 +1,31 @@
-#include <stdio.h> // standard input and output library
-#include <stdlib.h> // this includes functions regarding memory allocation
-#include <string.h> // contains string functions
-#include <unistd.h> //contains various constants
-#include <sys/socket.h> // for socket creation
-#include <netinet/in.h> //contains constants and structures needed for internet domain addresses
+// Core Includes
+#include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string>
+#include <string.h>
+#include <vector>
+
+// Socket Includes
+#include <sys/socket.h>
+#include <netinet/in.h>
+
+// Other
 #include <time.h>
- 
+#include <unistd.h>
+using namespace std;
+
+ // Defines
 #define PORT 6603
 
+vector<string> reqParse (string);
+
 int main(){
+	// Socket Creation
 	int server_fd, new_socket; long valread;
 	struct sockaddr_in address;
 	int addrlen = sizeof(address);
 
-	char *hello = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello world!";
-
-	// Creating socket descriptor
 	if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0){
 		perror("In socket");
 		exit(EXIT_FAILURE);
@@ -36,6 +46,7 @@ int main(){
 		exit(EXIT_FAILURE);
 	}
 
+	string request = "GET / HTTP/1.1\nHost: localhost\n\n";
 
 	while (1){
 		printf("\n------ Waiting for new connection ------\n\n");
@@ -47,9 +58,27 @@ int main(){
 		char buffer[30000] = {0};
 		valread = read(new_socket, buffer, 30000);
 		printf("%s\n",buffer);
-		write(new_socket, hello, strlen(hello));
-		printf("------Hello message sent------\n");
+		write(new_socket, request, strlen(request));
+		cout << "------Hello message sent------\n" << endl;
 		close(new_socket);
 	}
-    return 0;
+	return 0;
+}
+
+vector<string> reqParse (string s){
+	string delimiter = "\n";
+	size_t pos = 0;
+    string token;
+	vector<string> segments;
+
+	while ((pos = s.find(delimiter)) != string::npos) {
+        token = s.substr(0, pos);
+        segments.push_back(token);
+        s.erase(0, pos + delimiter.length());
+    }
+
+	for (int c = 0; c < segments.size(); c++){
+		cout << segments[c] << endl;
+	}
+	return segments;
 }
